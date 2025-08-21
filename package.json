@@ -1,0 +1,36 @@
+{
+  "name": "commitcoach",
+  "version": "1.0.0",
+  "description": "AI commit message helper (CLI) that drafts clean Git commit subjects from your staged diff.",
+  "type": "module",
+  "bin": {
+    "commitcoach": "bin/index.js"
+  },
+  "files": [
+    "bin",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "git",
+    "commit",
+    "cli",
+    "openai",
+    "conventional-commits"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "echo \"No tests specified\" && exit 0",
+    "cc": "node bin/index.js",
+    "ac": "git add . && git diff --cached --quiet || node bin/index.js",
+    "prepublishOnly": "npm test --silent || true"
+  },
+  "dependencies": {
+    "commander": "^14.0.0",
+    "dotenv": "^17.2.1",
+    "inquirer": "^12.9.3"
+  }
+}
