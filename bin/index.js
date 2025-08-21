@@ -8,6 +8,7 @@ const program = new Command()
   .name('commitcoach')
   .description('AI commit message helper')
   .option('-s, --style <style>', 'message style: conventional|casual|formal', 'conventional')
+  .option('-S, --server <url>', 'API base URL', process.env.COMMITCOACH_API || 'http://localhost:8080')
   .parse(process.argv);
 
 function getStagedDiff() {
@@ -50,32 +51,17 @@ ${diff}
 DIFF END`;
 }
 
-async function askAI(prompt) {
-  const apiKey = process.env.OPENAI_API_KEY;
-  const model = process.env.MODEL || 'gpt-4o-mini';
-  if (!apiKey) {
-    console.error('⚠️  Missing OPENAI_API_KEY in .env');
-    process.exit(1);
-  }
-
-  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+async function askAI(server, diff) {
+  const res = await fetch(`${server}/v1/commitcoach`, {
     method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      model,
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.2
-    })
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ diff }) // backend expects { diff }
   });
   if (!res.ok) {
-    console.error('⚠️  OpenAI request failed:', await res.text());
-    process.exit(1);
+    throw new Error(`Proxy error ${res.status}: ${await res.text()}`);
   }
   const data = await res.json();
-  return data.choices?.[0]?.message?.content?.trim() || 'chore: update';
+  return (data.message || 'chore: update').trim();
 }
 
 function commitWithMessage(message) {
@@ -128,13 +114,11 @@ async function confirmAndCommit(message) {
   const opts = program.opts();
   let diff = getStagedDiff();
 
-  // Defensive: clamp huge diffs (v0). v1 will chunk & summarize.
-  const HARD_LIMIT = 20_000; // chars
+  const HARD_LIMIT = 20_000;
   if (diff.length > HARD_LIMIT) diff = diff.slice(0, HARD_LIMIT) + '\n...[truncated]';
 
   while (true) {
-    const prompt = buildPrompt(opts.style, diff);
-    const msg = await askAI(prompt);
+    const msg = await askAI(opts.server, diff);
     const res = await confirmAndCommit(msg);
     if (res !== 'regen') break;
   }
