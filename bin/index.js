@@ -58,11 +58,19 @@ async function askAI(server, diff) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ diff }) // backend expects { diff }
   });
+  
   if (!res.ok) {
     throw new Error(`Proxy error ${res.status}: ${await res.text()}`);
   }
+  
   const data = await res.json();
-  return (data.message || 'chore: update').trim();
+  const text = data?.choices?.[0]?.message?.content?.trim();
+  
+  if (!text) {
+    throw new Error("Empty response from OpenAI");
+  }
+  
+  return { message: text };
 }
 
 
