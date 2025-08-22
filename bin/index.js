@@ -56,21 +56,22 @@ async function askAI(server, diff) {
   const res = await fetch(`${server}/v1/commitcoach`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ diff }) // backend expects { diff }
+    body: JSON.stringify({ diff })
   });
-  
+
   if (!res.ok) {
     throw new Error(`Proxy error ${res.status}: ${await res.text()}`);
   }
-  
+
   const data = await res.json();
-  const text = data?.choices?.[0]?.message?.content?.trim();
-  
+//   console.log('Response data:', JSON.stringify(data, null, 2));
+
+  const text = data?.message?.trim();
   if (!text) {
-    throw new Error("Empty response from OpenAI");
+    throw new Error(`Empty response from server. Full response: ${JSON.stringify(data)}`);
   }
-  
-  return { message: text };
+
+  return text;               // <-- return the plain string
 }
 
 
