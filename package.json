@@ -1,6 +1,6 @@
 {
   "name": "commitcoach",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "AI commit message helper (CLI) that drafts clean Git commit subjects from your staged diff.",
   "type": "module",
   "bin": {
