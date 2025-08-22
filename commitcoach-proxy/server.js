@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import express from "express";
 import rateLimit from "express-rate-limit";
-// import fetch from "node-fetch";
+import fetch from "node-fetch";
 
 const app = express();
 app.use(express.json());
@@ -14,26 +14,28 @@ app.post("/v1/commitcoach", async (req, res) => {
   if (!diff) return res.status(400).json({ error: "diff required" });
 
   try {
-    const r = await fetch("https://api.openai.com/v1/chat/completions", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-    "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
-  },
-  body: JSON.stringify({
-    model: "gpt-4o-mini",
-    temperature: 0.2,
-    messages: [
-      { role: "system", content: "You write one-line Conventional Commit messages (<=72 chars)." },
-      { role: "user", content: `Generate a Conventional Commit message for this staged diff:\n\n${diff}` }
-    ]
-  }),
-});
+    const r = await fetch("https://api.openai.com/v1/responses", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: "gpt-4.1-mini",
+        input: [
+          { role: "system", content: "You write concise, conventional commit messages." },
+          { role: "user", content: `Generate a commit message for this diff:\n\n${diff}` }
+        ]
+      })
+    });
 
-if (!r.ok) return res.status(502).json({ error: `OpenAI error ${r.status}: ${await r.text()}` });
-const data = await r.json();
-const text = data.choices?.[0]?.message?.content?.trim() || "";
-res.json({ message: text || "chore: update" });
+    if (!r.ok) {
+      const text = await r.text();
+      return res.status(502).json({ error: `OpenAI error: ${text}` });
+    }
+
+    const data = await r.json();
+    res.json({ message: data.output_text?.trim() || "chore: update" });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "server error" });

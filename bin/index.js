@@ -4,11 +4,12 @@ import 'dotenv/config';
 import inquirer from 'inquirer';
 import { spawnSync } from 'node:child_process';
 
+
+const DEFAULT_SERVER = "https://commitcoach-proxy.onrender.com";
 const program = new Command()
   .name('commitcoach')
   .description('AI commit message helper')
   .option('-s, --style <style>', 'message style: conventional|casual|formal', 'conventional')
-  .option('-S, --server <url>', 'API base URL', process.env.COMMITCOACH_API || 'http://localhost:8080')
   .parse(process.argv);
 
 function getStagedDiff() {
@@ -64,6 +65,9 @@ async function askAI(server, diff) {
   return (data.message || 'chore: update').trim();
 }
 
+
+
+
 function commitWithMessage(message) {
   const r = spawnSync('git', ['commit', '-q', '-m', message], {
     encoding: 'utf8', stdio: 'pipe'
@@ -111,14 +115,14 @@ async function confirmAndCommit(message) {
 }
 
 (async () => {
-  const opts = program.opts();
+//   const opts = program.opts();
   let diff = getStagedDiff();
 
   const HARD_LIMIT = 20_000;
   if (diff.length > HARD_LIMIT) diff = diff.slice(0, HARD_LIMIT) + '\n...[truncated]';
 
   while (true) {
-    const msg = await askAI(opts.server, diff);
+    const msg = await askAI(DEFAULT_SERVER, diff);
     const res = await confirmAndCommit(msg);
     if (res !== 'regen') break;
   }
