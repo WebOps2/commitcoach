@@ -3,7 +3,6 @@ import express from "express";
 import rateLimit from "express-rate-limit";
 // import fetch from "node-fetch";
 
-const express = require('express');
 const app = express();
 app.use(express.json());
 
