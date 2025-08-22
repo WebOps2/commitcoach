@@ -6,3 +6,4 @@ AI commit message helper (CLI).
 ```bash
 npm i -g commitcoach"Test line" 
 "Test line -2" 
+"Test line -2" 
