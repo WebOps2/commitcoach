@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import express from "express";
 import rateLimit from "express-rate-limit";
-import fetch from "node-fetch";
+// import fetch from "node-fetch";
 
 const app = express();
 app.use(express.json());
